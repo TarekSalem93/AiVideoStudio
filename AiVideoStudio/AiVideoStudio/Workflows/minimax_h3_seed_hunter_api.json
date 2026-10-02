@@ -1,0 +1,889 @@
+{
+  "5": {
+    "inputs": {
+      "prompt": [
+        "365",
+        0
+      ],
+      "width": [
+        "22:9",
+        0
+      ],
+      "height": [
+        "22:9",
+        1
+      ],
+      "length": [
+        "22:24",
+        1
+      ],
+      "ref_image_size": "max",
+      "clip": [
+        "171:3",
+        0
+      ],
+      "vae": [
+        "171:2",
+        0
+      ],
+      "audio_vae": [
+        "171:1",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "417",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "417",
+        1
+      ],
+      "ref_images.ref_image_2": [
+        "417",
+        2
+      ],
+      "ref_images.ref_image_3": [
+        "417",
+        3
+      ],
+      "ref_images.ref_image_4": [
+        "417",
+        4
+      ],
+      "ref_images.ref_image_5": [
+        "417",
+        5
+      ],
+      "ref_images.ref_image_6": [
+        "417",
+        6
+      ],
+      "ref_images.ref_image_7": [
+        "417",
+        7
+      ],
+      "ref_images.ref_image_8": [
+        "417",
+        8
+      ],
+      "ref_videos.ref_video_0": [
+        "511",
+        0
+      ],
+      "ref_videos.ref_video_1": [
+        "417",
+        10
+      ],
+      "ref_videos.ref_video_2": [
+        "417",
+        11
+      ],
+      "ref_video_audios.ref_video_audio_0": [
+        "510",
+        0
+      ],
+      "ref_video_audios.ref_video_audio_1": [
+        "417",
+        13
+      ],
+      "ref_video_audios.ref_video_audio_2": [
+        "417",
+        14
+      ],
+      "ref_audios.ref_audio_0": [
+        "417",
+        15
+      ],
+      "ref_audios.ref_audio_1": [
+        "417",
+        16
+      ],
+      "ref_audios.ref_audio_2": [
+        "417",
+        17
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Reference to Video"
+    }
+  },
+  "16": {
+    "inputs": {
+      "seed": 864569260196868
+    },
+    "class_type": "easy seed",
+    "_meta": {
+      "title": "Start New Gen! (Click Button)"
+    }
+  },
+  "18": {
+    "inputs": {
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "low_mm_20261002_210722",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": false,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": false,
+      "images": [
+        "176",
+        0
+      ],
+      "audio": [
+        "177",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
+  },
+  "21": {
+    "inputs": {
+      "PowerLoraLoaderHeaderWidget": {
+        "type": "PowerLoraLoaderHeaderWidget"
+      },
+      "lora_1": {
+        "on": true,
+        "lora": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+        "strength": 1
+      },
+      "➕ Add Lora": "",
+      "model": [
+        "196",
+        0
+      ]
+    },
+    "class_type": "Power Lora Loader (rgthree)",
+    "_meta": {
+      "title": "LoRAs (Applies to both Stage 1 and Stage 2)"
+    }
+  },
+  "34": {
+    "inputs": {
+      "frame_rate": [
+        "170",
+        0
+      ],
+      "loop_count": 0,
+      "filename_prefix": "mm_20261002_210722",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 16,
+      "save_metadata": false,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": [
+        "354",
+        0
+      ],
+      "images": [
+        "341",
+        0
+      ],
+      "audio": [
+        "338",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Final Video"
+    }
+  },
+  "103": {
+    "inputs": {
+      "seed": 1093609946603384
+    },
+    "class_type": "easy seed",
+    "_meta": {
+      "title": "Start/Reroll Upscale Pass"
+    }
+  },
+  "146": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "#1 SELECTED"
+    }
+  },
+  "147": {
+    "inputs": {
+      "any_01": [
+        "146",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Latent Selection"
+    }
+  },
+  "169": {
+    "inputs": {
+      "value": 24
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Default FPS"
+    }
+  },
+  "170": {
+    "inputs": {
+      "any_02": [
+        "169",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Target FPS"
+    }
+  },
+  "176": {
+    "inputs": {
+      "samples": [
+        "125:12",
+        0
+      ],
+      "vae": [
+        "171:2",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "177": {
+    "inputs": {
+      "samples": [
+        "125:12",
+        0
+      ],
+      "vae": [
+        "171:1",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "196": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "171:4",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "Model Attention Backend"
+    }
+  },
+  "258": {
+    "inputs": {
+      "samples": [
+        "125:12",
+        1
+      ],
+      "vae": [
+        "171:1",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "Final Audio Decode"
+    }
+  },
+  "259": {
+    "inputs": {
+      "samples": [
+        "125:12",
+        1
+      ],
+      "vae": [
+        "171:2",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "Final Decode"
+    }
+  },
+  "261": {
+    "inputs": {
+      "any_01": [
+        "258",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Audio Source Selection"
+    }
+  },
+  "270": {
+    "inputs": {
+      "any_02": [
+        "259",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Gen Source Selection"
+    }
+  },
+  "338": {
+    "inputs": {
+      "any_02": [
+        "261",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Final Audio Selection"
+    }
+  },
+  "341": {
+    "inputs": {
+      "any_02": [
+        "270",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Final Video Selection"
+    }
+  },
+  "353": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Don't Save Until Finalization"
+    }
+  },
+  "354": {
+    "inputs": {
+      "any_01": [
+        "356",
+        0
+      ],
+      "any_03": [
+        "353",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Save Output"
+    }
+  },
+  "356": {
+    "inputs": {
+      "value": true
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Boolean"
+    }
+  },
+  "365": {
+    "inputs": {
+      "prompt": "subject_definitions:\r\n<Subject 1> is the character mike, whose appearance comes from <Picture 1> and who is visually transferred as an apple, with all source appearance preserved; all other source characteristics are excluded.\r\n<Subject 2> is the character track, whose appearance comes from <Picture 2> and who is visually transferred as a banana, with all source appearance preserved; all other source characteristics are excluded.\r\n<Subject 3> is the street environment, whose visual composition and background setting come from <Picture 3>; all other source characteristics are excluded.\r\n\r\nsummary:\r\n[reference generation + video continuation + audio reuse]\r\n\r\nThe target video is a continuation of the visual narrative established by <Picture 1>, <Picture 2>, and <Picture 3>, with <Subject 1> and <Subject 2> retaining their transferred appearances and <Subject 3> serving as the background setting. No audio is reused from existing video tracks.\r\n\r\nretention_analysis:\r\n<Subject 1> (appears in [Shot 1]): fully_preserved - appearance as an apple, all source appearance retained, all other source characteristics excluded.\r\n<Subject 2> (appears in [Shot 2]): fully_preserved - appearance as a banana, all source appearance retained, all other source characteristics excluded.\r\n<Subject 3> (appears in [Shot 1], [Shot 2]): fully_preserved - background setting as the street, all source environment retained, all other source characteristics excluded.\r\n\r\ndetailed_description:\r\nThe video is rendered in a cartoonish style. [Shot 1] The shot begins from <Picture 1>, showing <Subject 1> (S1), the apple-mike, walking confidently down the street. The environment is the street background from <Picture 3>, with cartoonish buildings and sidewalks. The camera follows <Subject 1> in a medium tracking shot as it steps on a large, yellow dog poop. A small “yuck!” sound effect plays as the apple-mike stops, turns slightly, and looks down at the poop with a mildly disgusted expression. [Shot 2] At 00:03.000, the camera cuts to <Subject 2> (S2), the banana-track, standing beside a trash can. The banana-track looks up at the apple-mike with a sad, slightly pouting expression. The banana-track says in a soft, disappointed tone: <d>[English] You stepped on my poop, Mike. I’m so sad.</d> The apple-mike (S1) replies with a shrug and a small smile: <d>[English] I didn’t know it was yours. Sorry, banana.</d> The banana-track’s eyes droop slightly, and it turns away, walking slowly toward a bench. The camera slowly pans left to follow the banana-track’s movement, ending on its back as it sits down. The street background from <Picture 3> remains consistent throughout. No music or ambient sound is added.\r\n\r\noverall_soundscape:\r\nThe soundscape includes the soft crunch of the apple-mike stepping on the dog poop, a faint “yuck!” sound effect, and the banana-track’s soft, disappointed voice. No ambient environmental sounds are added.\r\n\r\nnon_diegetic_music:\r\nN/A",
+      "references": [
+        "418",
+        0
+      ]
+    },
+    "class_type": "H3PromptIDE",
+    "_meta": {
+      "title": "H3 Prompt IDE"
+    }
+  },
+  "416": {
+    "inputs": {
+      "media_state": "[{\"kind\":\"picture\",\"file\":\"minimax_h3/img_00010_.png [input]\",\"name\":\"img_00010_.png\",\"duration\":null,\"width\":1088,\"height\":1928,\"has_audio\":false,\"audio_mode\":\"off\",\"uid\":\"mmujmgp5t0\"},{\"kind\":\"picture\",\"file\":\"minimax_h3/img_00011_.png [input]\",\"name\":\"img_00011_.png\",\"duration\":null,\"width\":1088,\"height\":1928,\"has_audio\":false,\"audio_mode\":\"off\",\"uid\":\"mmujmgqz31\"},{\"kind\":\"picture\",\"file\":\"minimax_h3/img_00012_.png [input]\",\"name\":\"img_00012_.png\",\"duration\":null,\"width\":1928,\"height\":1088,\"has_audio\":false,\"audio_mode\":\"off\",\"uid\":\"mmujmgsho2\"}]",
+      "Open loader…": null,
+      "+ Native-output splitter": null
+    },
+    "class_type": "MiniMaxH3MediaLoader",
+    "_meta": {
+      "title": "Fantastic H3 Media Loader"
+    }
+  },
+  "417": {
+    "inputs": {
+      "references": [
+        "416",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceSplitter",
+    "_meta": {
+      "title": "Fantastic H3 Reference Splitter"
+    }
+  },
+  "418": {
+    "inputs": {
+      "pictures.<Picture 1>": [
+        "417",
+        0
+      ],
+      "pictures.<Picture 2>": [
+        "417",
+        1
+      ],
+      "pictures.<Picture 3>": [
+        "417",
+        2
+      ],
+      "pictures.<Picture 4>": [
+        "417",
+        3
+      ],
+      "pictures.<Picture 5>": [
+        "417",
+        4
+      ],
+      "pictures.<Picture 6>": [
+        "417",
+        5
+      ],
+      "pictures.<Picture 7>": [
+        "417",
+        6
+      ],
+      "pictures.<Picture 8>": [
+        "417",
+        7
+      ],
+      "pictures.<Picture 9>": [
+        "417",
+        8
+      ],
+      "videos.<Video 1>": [
+        "417",
+        9
+      ],
+      "videos.<Video 2>": [
+        "417",
+        10
+      ],
+      "videos.<Video 3>": [
+        "417",
+        11
+      ],
+      "audios.<Audio 1>": [
+        "417",
+        15
+      ],
+      "audios.<Audio 2>": [
+        "417",
+        16
+      ],
+      "audios.<Audio 3>": [
+        "417",
+        17
+      ]
+    },
+    "class_type": "H3PromptReferenceInputs",
+    "_meta": {
+      "title": "H3 Reference Inputs"
+    }
+  },
+  "471": {
+    "inputs": {
+      "any_02": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Conditioning Fallback"
+    }
+  },
+  "485": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Which Preview to Select for Upscale Pass?"
+    }
+  },
+  "486": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Enable Sampler Preview #1?"
+    }
+  },
+  "487": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Enable Sampler Preview #1?"
+    }
+  },
+  "488": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Enable Sampler Preview #1?"
+    }
+  },
+  "489": {
+    "inputs": {
+      "label_json": "{\"text\":\"After the First Pass Sample Previews all finish, select which of\\nthe finished previews looks best below (Make sure only 1 is selected). Then continue right ->\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "490": {
+    "inputs": {
+      "label_json": "{\"text\":\"Start new gens by making sure 'Enable Upscale Pass' is\\nturned off then click Manual Random Seed button below\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "491": {
+    "inputs": {
+      "label_json": "{\"text\":\"When you've selected which Sample Preview to upscale, enable the\\nbelow toggle then continue right ->\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "492": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Enable Upscale Pass"
+    }
+  },
+  "494": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Add Silence to Compensate for No OG Video Audio"
+    }
+  },
+  "495": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Options Control Panel"
+    }
+  },
+  "496": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Seamless Vid Continuation -OR- Normal Vid Refs?"
+    }
+  },
+  "499": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Force <Audio 1> into Latent (Custom Audio) -- Great for lipsyncing/music videos"
+    }
+  },
+  "500": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "<Picture 1> is FIRST FRAME"
+    }
+  },
+  "501": {
+    "inputs": {},
+    "class_type": "PixaromaGroupSwitch",
+    "_meta": {
+      "title": "Force <Picture 2> to be LAST FRAME"
+    }
+  },
+  "502": {
+    "inputs": {
+      "label_json": "{\"text\":\"1. Turn Seamless Video Continuation & Single Pass ON in the Options.\\n2. Load your video in the Video 1 slot and click the yellow Scissors icon.\\n  - the left side (beginning) is where your video will start after being stitched together.\\n  - the right side (end) is where your gen will continue from.\\n   (IDEALLY your video is 24 FPS and already the correct size/aspect ratio\\n   as mismatched video can result in imperfect continuations! Use Crop tool to resize.)\\n3. Select Overlap Frames (5, 22, 39, or 56). This is the # of frames Minimax\\n     has access to as reference for how to continue your video.\\n4. If your video has no audio, turn on the OG Vid Has No Audio option to the right.\\n5. Since this is Single Pass, change your video genning settings:\\n   - Steps: 6-10+\\n   - Increase megapixels (since there will be no upscaling, higher is better).\\n   - Turn off Previews #2 and #3\\n   - Turn off Final Upscale Pass\\n6. Prompt! Remember that the first X Overlap frames of your gen are SPOKEN FOR!\\n   In order to get seamless continuation, start with\\n   \\\"a single continuous shot from beginning to end\\\" and then describe what's happening\\n   in a way that the model will understand how it can continue the shot.\\n\\nSeamless Video Continuation is for changing existing videos, and for creating\\nsingle-take shots longer than 15s. It is not a replacement for video editing, and if you \\ncan get away with cuts then just use normal genning practices with references to your \\nprevious shots/scenes.\\\\n\\\\nThe more overlap frames, the slower the gen (go figure).\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#000000\",\"textAlign\":\"left\",\"backgroundColor\":\"#ffffff\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "503": {
+    "inputs": {
+      "label_json": "{\"text\":\"If you get: 'NoneType' object has no attribute 'shape' error - Turn Single Pass ON! You forgot.\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#f66744\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "504": {
+    "inputs": {
+      "label_json": "{\"text\":\"Turns this into a normal 1-pass WF. Turn off Previews #2, #3,\\nand Upscale Pass. Best at 1.0-2.0 MP, 6-10 steps w/ Turbo.\\nNote: Single Pass is required for Video Continuation.\",\"fontSize\":10,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":7,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "505": {
+    "inputs": {
+      "label_json": "{\"text\":\"Ctrl+B to turn off Block/Sparse Attn for Single Pass\\nSol-Attn - Better when not using Turbo LoRA\\nSLA - Better for Lightx2v LoRAs\\nVSA - Better for fasth3 Model\",\"fontSize\":10,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":7,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "508": {
+    "inputs": {
+      "label_json": "{\"text\":\"Start your upscale by clicking the below button. If you don't like the result, you can reroll\\nby clicking the button as many times as you like to get variations of the first pass! (Unless\\nyou change something like prompt, resolution, refs, ANYTHING that happened before this step)\",\"fontSize\":18,\"fontFamily\":\"Arial\",\"fontColor\":\"#ffffff\",\"textAlign\":\"left\",\"backgroundColor\":\"#333333\",\"padding\":10,\"borderRadius\":6,\"opacity\":1,\"fontWeight\":\"normal\",\"lineHeight\":1}"
+    },
+    "class_type": "PixaromaLabel",
+    "_meta": {
+      "title": "Label Pixaroma"
+    }
+  },
+  "509": {
+    "inputs": {},
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Choose OG Audio Source"
+    }
+  },
+  "510": {
+    "inputs": {
+      "any_01": [
+        "417",
+        12
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Any Switch (rgthree)"
+    }
+  },
+  "511": {
+    "inputs": {
+      "any_01": [
+        "417",
+        9
+      ]
+    },
+    "class_type": "Any Switch (rgthree)",
+    "_meta": {
+      "title": "Any Switch (rgthree)"
+    }
+  },
+  "512": {
+    "inputs": {},
+    "class_type": "PixaromaRunTimer",
+    "_meta": {
+      "title": "Run Timer Pixaroma"
+    }
+  },
+  "171:3": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "171:2": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "171:1": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "171:4": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "22:7": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": [
+        "22:8",
+        0
+      ],
+      "denoise": 1,
+      "model": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "22:8": {
+    "inputs": {
+      "value": 6
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "TOTAL STEPS"
+    }
+  },
+  "22:6": {
+    "inputs": {
+      "sampler_name": "er_sde"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "22:9": {
+    "inputs": {
+      "aspect_ratio": "9:16 (Portrait Widescreen)",
+      "megapixels": 0.4,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector (Size)"
+    }
+  },
+  "22:23": {
+    "inputs": {
+      "value": 8
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Video Length (seconds)"
+    }
+  },
+  "22:24": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "22:23",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  },
+  "125:17": {
+    "inputs": {
+      "noise_seed": [
+        "125:126",
+        1
+      ]
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "125:126": {
+    "inputs": {
+      "expression": "a",
+      "variables.a": [
+        "16",
+        0
+      ]
+    },
+    "class_type": "SimpleCalculatorKJ",
+    "_meta": {
+      "title": "SimpleCalculatorKJ"
+    }
+  },
+  "125:12": {
+    "inputs": {
+      "noise": [
+        "125:17",
+        0
+      ],
+      "guider": [
+        "125:14",
+        0
+      ],
+      "sampler": [
+        "22:6",
+        0
+      ],
+      "sigmas": [
+        "22:7",
+        0
+      ],
+      "latent_image": [
+        "5",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Sampler #1"
+    }
+  },
+  "125:14": {
+    "inputs": {
+      "model": [
+        "21",
+        0
+      ],
+      "conditioning": [
+        "471",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AiVideoStudio.Views.SceneEditorPage"
+             Title="History">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label Text="Generation History"
+                    FontSize="24"
+                    HorizontalOptions="Center" />
+            <Label x:Name="EmptyLabel" Text="No generations saved yet." FontSize="14" TextColor="Gray" HorizontalOptions="Center" />
+            <CollectionView x:Name="HistoryView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="5" Padding="10">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Created, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontAttributes="Bold" />
+                                <Label Text="{Binding Template}" FontSize="12" TextColor="Gray" />
+                                <Label Text="{Binding StoryPreview}" FontSize="14" />
+                                <Label Text="{Binding Seed, StringFormat='Seed {0}'}" FontSize="12" TextColor="Gray" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Button Text="Open video" Clicked="OnOpenVideoClicked" />
+                                    <Button Text="Folder" Clicked="OnOpenFolderClicked" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

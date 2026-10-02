@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AiVideoStudio.Views.MainPage"
+             Title="AI Video Studio">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label Text="MiniMax H3 AI Video Studio"
+                    FontSize="24"
+                    HorizontalOptions="Center" />
+
+            <Label x:Name="HealthLabel" Text="Checking servers..." FontSize="12" TextColor="Gray" />
+
+            <Label Text="Model" FontAttributes="Bold" />
+            <Picker x:Name="ModelPicker" Title="Pick Ollama model" />
+
+            <Label Text="Workflow template" FontAttributes="Bold" />
+            <Picker x:Name="TemplatePicker" Title="Pick ComfyUI template" />
+
+            <Label Text="Steps" FontAttributes="Bold" />
+            <Entry x:Name="StepsEntry" Keyboard="Numeric" Text="6" />
+
+            <Label Text="Your prompt" FontAttributes="Bold" />
+            <Entry x:Name="PromptEntry"
+                   Placeholder="e.g. a robot learning to paint, cinematic..."
+                   Text="Write a 3-scene story about a robot learning to paint" />
+
+            <Label Text="Reference media (fills Media Loader slots)" FontAttributes="Bold" />
+            <Button Text="Pick photos (up to 9)"
+                    Clicked="OnPickPhotosClicked"
+                    HorizontalOptions="Center" />
+            <Label x:Name="PhotosLabel" Text="No photos selected." FontSize="12" TextColor="Gray" />
+            <Button Text="Pick videos (up to 3)"
+                    Clicked="OnPickVideosClicked"
+                    HorizontalOptions="Center" />
+            <Label x:Name="VideosLabel" Text="No videos selected." FontSize="12" TextColor="Gray" />
+            <Button Text="Pick audios (up to 3)"
+                    Clicked="OnPickAudiosClicked"
+                    HorizontalOptions="Center" />
+            <Label x:Name="AudiosLabel" Text="No audios selected." FontSize="12" TextColor="Gray" />
+
+            <Button Text="Generate Story"
+                    Clicked="OnGenerateClicked"
+                    HorizontalOptions="Center" />
+
+            <Button Text="Build H3 Video Prompt (from story above)"
+                    Clicked="OnBuildPromptClicked"
+                    HorizontalOptions="Center" />
+
+            <Button Text="Generate Video"
+                    Clicked="OnVideoClicked"
+                    HorizontalOptions="Center" />
+
+            <Button Text="Open last video"
+                    Clicked="OnOpenClicked"
+                    HorizontalOptions="Center" />
+
+            <Button Text="Dub Arabic voiceover over last video"
+                    Clicked="OnDubClicked"
+                    HorizontalOptions="Center" />
+
+            <Label Text="Publish last video" FontAttributes="Bold" />
+            <Entry x:Name="TitleEntry" Placeholder="Video title" Text="AiVideoStudio" />
+            <HorizontalStackLayout Spacing="10">
+                <CheckBox x:Name="YouTubeCheck" /><Label Text="YouTube" VerticalOptions="Center" />
+                <CheckBox x:Name="TikTokCheck" /><Label Text="TikTok" VerticalOptions="Center" />
+                <CheckBox x:Name="FacebookCheck" /><Label Text="Facebook" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <Button Text="Publish"
+                    Clicked="OnPublishClicked"
+                    HorizontalOptions="Center" />
+
+            <Button Text="Check / Start ComfyUI"
+                    Clicked="OnComfyClicked"
+                    HorizontalOptions="Center" />
+
+            <Label Text="Story (edit freely before making video):"
+                    FontSize="18"
+                    FontAttributes="Bold" />
+
+            <Editor x:Name="ResponseEditor"
+                    Placeholder="Generated story lands here — fix whatever you want, video uses this text."
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="150"
+                    FontSize="16" />
+
+            <Label x:Name="StatusLabel" Text="" FontSize="12" TextColor="Gray" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AiVideoStudio.Views.SettingsPage"
+             Title="Settings">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label Text="Application Settings" 
+                    FontSize="24" 
+                    HorizontalOptions="Center" />
+
+            <Label Text="Ollama Server URL" 
+                    FontSize="16" 
+                    FontAttributes="Bold" />
+            <Entry x:Name="OllamaUrlEntry" 
+                   Placeholder="http://localhost:11434" 
+                   Text="http://localhost:11434"/>
+
+            <Label Text="ComfyUI Server URL" 
+                    FontSize="16" 
+                    FontAttributes="Bold" />
+            <Entry x:Name="ComfyUiUrlEntry" 
+                   Placeholder="http://localhost:8188" 
+                   Text="http://localhost:8188"/>
+
+            <Label Text="Default Generation Parameters" 
+                    FontSize="16" 
+                    FontAttributes="Bold" />
+            
+            <StackLayout>
+                <Label Text="Aspect Ratio" />
+                <Entry x:Name="AspectRatioEntry"
+                       Placeholder="1.77"
+                       Text="1.77"/>
+
+                <Label Text="Default Steps" />
+                <Entry x:Name="StepsEntry"
+                       Placeholder="6"
+                       Text="6"/>
+
+                <Label Text="ffmpeg path (or exe)" />
+                <Entry x:Name="FfmpegEntry"
+                       Placeholder="ffmpeg"
+                       Text="ffmpeg"/>
+
+                <Label Text="Voiceover voice (edge-tts)" />
+                <Entry x:Name="VoiceEntry"
+                       Placeholder="ar-SA-ZariyahNeural"
+                       Text="ar-SA-ZariyahNeural"/>
+            </StackLayout>
+
+            <Button Text="Save Settings"
+                    Clicked="OnSaveClicked"
+                    HorizontalOptions="Center"/>
+
+            <Label x:Name="SettingsStatusLabel" Text="" FontSize="12" TextColor="Gray" />
+
+            <Label Text="Publishing credentials"
+                    FontSize="16"
+                    FontAttributes="Bold" />
+            <Label x:Name="CredsLabel" Text="Checking..." FontSize="12" TextColor="Gray" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

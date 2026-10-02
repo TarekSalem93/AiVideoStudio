@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AiVideoStudio.Views.ProjectDetailPage"
+             Title="Project">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label x:Name="TitleLabel" Text="" FontSize="24" HorizontalOptions="Center" />
+            <Label x:Name="InfoLabel" Text="" FontSize="12" TextColor="Gray" HorizontalOptions="Center" />
+            <Label Text="Story to split (replaces scenes)" FontSize="12" />
+            <Editor x:Name="SplitEditor" Placeholder="Paste story here..." AutoSize="TextChanges" MinimumHeightRequest="80" />
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Entry x:Name="CountEntry" Keyboard="Numeric" Text="3" WidthRequest="60" />
+                <Button Text="Split into scenes" Clicked="OnSplitClicked" />
+                <Button Text="Add scene" Clicked="OnAddSceneClicked" />
+            </HorizontalStackLayout>
+            <Label x:Name="StatusLabel" Text="" FontSize="12" TextColor="Gray" />
+            <Label Text="Project media (same slots for every scene)" FontSize="12" />
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Button Text="Photos" Clicked="OnMediaPhotosClicked" />
+                <Button Text="Videos" Clicked="OnMediaVideosClicked" />
+                <Button Text="Audios" Clicked="OnMediaAudiosClicked" />
+            </HorizontalStackLayout>
+            <Label x:Name="MediaLabel" Text="No project media." FontSize="12" TextColor="Gray" HorizontalOptions="Center" />
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                <Button Text="Render all" Clicked="OnRenderAllClicked" />
+                <Button Text="Assemble film" Clicked="OnAssembleClicked" />
+                <Button Text="Cancel" Clicked="OnCancelClicked" />
+            </HorizontalStackLayout>
+            <CollectionView x:Name="ScenesView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="5" Padding="10">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Index, StringFormat='Scene {0}'}" FontAttributes="Bold" />
+                                <Label Text="{Binding Status}" FontSize="12" TextColor="Gray" />
+                                <Label Text="Beats" FontSize="12" />
+                                <Editor ClassId="Beats" Text="{Binding Beats}" AutoSize="TextChanges" MinimumHeightRequest="80" TextChanged="OnSceneEdited" />
+                                <Label Text="H3 prompt (queued as-is)" FontSize="12" />
+                                <Editor ClassId="H3" Text="{Binding H3Prompt}" AutoSize="TextChanges" MinimumHeightRequest="120" TextChanged="OnSceneEdited" />
+                                <HorizontalStackLayout Spacing="10">
+                                    <Button Text="Render scene" Clicked="OnRenderSceneClicked" />
+                                    <Button Text="Pick clip" Clicked="OnPickClipClicked" />
+                                    <Button Text="Remove scene" Clicked="OnRemoveSceneClicked" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
