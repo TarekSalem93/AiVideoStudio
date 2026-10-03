@@ -2,89 +2,85 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AiVideoStudio.Views.MainPage"
-             Title="AI Video Studio">
+             Title="Studio">
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <Label Text="MiniMax H3 AI Video Studio"
-                    FontSize="24"
-                    HorizontalOptions="Center" />
+        <VerticalStackLayout Padding="20,12" Spacing="4">
+            <Label Text="AI Video Studio" Style="{StaticResource PageTitle}" />
+            <Label Text="Story to film, powered by Ollama + MiniMax H3" Style="{StaticResource PageSubtitle}" />
 
-            <Label x:Name="HealthLabel" Text="Checking servers..." FontSize="12" TextColor="Gray" />
+            <Border Style="{StaticResource Pill}">
+                <Label x:Name="HealthLabel" Text="Checking servers..." Style="{StaticResource Muted}" HorizontalOptions="Center" />
+            </Border>
 
-            <Label Text="Model" FontAttributes="Bold" />
-            <Picker x:Name="ModelPicker" Title="Pick Ollama model" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="SETUP" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Model" Style="{StaticResource Muted}" />
+                    <Picker x:Name="ModelPicker" Title="Pick Ollama model" />
+                    <Label Text="Workflow template" Style="{StaticResource Muted}" />
+                    <Picker x:Name="TemplatePicker" Title="Pick ComfyUI template" />
+                    <Label Text="Steps" Style="{StaticResource Muted}" />
+                    <Entry x:Name="StepsEntry" Keyboard="Numeric" Text="6" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Workflow template" FontAttributes="Bold" />
-            <Picker x:Name="TemplatePicker" Title="Pick ComfyUI template" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="REFERENCE MEDIA" Style="{StaticResource SectionTitle}" />
+                    <Button Text="Pick photos (up to 9)" Style="{StaticResource GhostButton}" Clicked="OnPickPhotosClicked" />
+                    <Label x:Name="PhotosLabel" Text="No photos selected." Style="{StaticResource Muted}" />
+                    <Button Text="Pick videos (up to 3)" Style="{StaticResource GhostButton}" Clicked="OnPickVideosClicked" />
+                    <Label x:Name="VideosLabel" Text="No videos selected." Style="{StaticResource Muted}" />
+                    <Button Text="Pick audios (up to 3)" Style="{StaticResource GhostButton}" Clicked="OnPickAudiosClicked" />
+                    <Label x:Name="AudiosLabel" Text="No audios selected." Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Steps" FontAttributes="Bold" />
-            <Entry x:Name="StepsEntry" Keyboard="Numeric" Text="6" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="STORY" Style="{StaticResource SectionTitle}" />
+                    <Entry x:Name="PromptEntry"
+                           Placeholder="e.g. a robot learning to paint, cinematic..."
+                           Text="Write a 3-scene story about a robot learning to paint" />
+                    <Button Text="Generate Story" Style="{StaticResource PrimaryButton}" Clicked="OnGenerateClicked" />
+                    <Editor x:Name="ResponseEditor"
+                            Placeholder="Generated story lands here — fix whatever you want, video uses this text."
+                            AutoSize="TextChanges"
+                            MinimumHeightRequest="150"
+                            FontSize="16" />
+                    <Button Text="Build H3 Video Prompt" Style="{StaticResource GhostButton}" Clicked="OnBuildPromptClicked" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Your prompt" FontAttributes="Bold" />
-            <Entry x:Name="PromptEntry"
-                   Placeholder="e.g. a robot learning to paint, cinematic..."
-                   Text="Write a 3-scene story about a robot learning to paint" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="VIDEO" Style="{StaticResource SectionTitle}" />
+                    <Button Text="Generate Video" Style="{StaticResource PrimaryButton}" Clicked="OnVideoClicked" />
+                    <Button Text="Open last video" Style="{StaticResource GhostButton}" Clicked="OnOpenClicked" />
+                    <Button Text="Dub Arabic voiceover" Style="{StaticResource GhostButton}" Clicked="OnDubClicked" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Reference media (fills Media Loader slots)" FontAttributes="Bold" />
-            <Button Text="Pick photos (up to 9)"
-                    Clicked="OnPickPhotosClicked"
-                    HorizontalOptions="Center" />
-            <Label x:Name="PhotosLabel" Text="No photos selected." FontSize="12" TextColor="Gray" />
-            <Button Text="Pick videos (up to 3)"
-                    Clicked="OnPickVideosClicked"
-                    HorizontalOptions="Center" />
-            <Label x:Name="VideosLabel" Text="No videos selected." FontSize="12" TextColor="Gray" />
-            <Button Text="Pick audios (up to 3)"
-                    Clicked="OnPickAudiosClicked"
-                    HorizontalOptions="Center" />
-            <Label x:Name="AudiosLabel" Text="No audios selected." FontSize="12" TextColor="Gray" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="PUBLISH" Style="{StaticResource SectionTitle}" />
+                    <Entry x:Name="TitleEntry" Placeholder="Video title" Text="AiVideoStudio" />
+                    <HorizontalStackLayout Spacing="6">
+                        <CheckBox x:Name="YouTubeCheck" VerticalOptions="Center" /><Label Text="YouTube" VerticalOptions="Center" />
+                        <CheckBox x:Name="TikTokCheck" VerticalOptions="Center" /><Label Text="TikTok" VerticalOptions="Center" />
+                        <CheckBox x:Name="FacebookCheck" VerticalOptions="Center" /><Label Text="Facebook" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Button Text="Publish" Style="{StaticResource PrimaryButton}" Clicked="OnPublishClicked" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Button Text="Generate Story"
-                    Clicked="OnGenerateClicked"
-                    HorizontalOptions="Center" />
-
-            <Button Text="Build H3 Video Prompt (from story above)"
-                    Clicked="OnBuildPromptClicked"
-                    HorizontalOptions="Center" />
-
-            <Button Text="Generate Video"
-                    Clicked="OnVideoClicked"
-                    HorizontalOptions="Center" />
-
-            <Button Text="Open last video"
-                    Clicked="OnOpenClicked"
-                    HorizontalOptions="Center" />
-
-            <Button Text="Dub Arabic voiceover over last video"
-                    Clicked="OnDubClicked"
-                    HorizontalOptions="Center" />
-
-            <Label Text="Publish last video" FontAttributes="Bold" />
-            <Entry x:Name="TitleEntry" Placeholder="Video title" Text="AiVideoStudio" />
-            <HorizontalStackLayout Spacing="10">
-                <CheckBox x:Name="YouTubeCheck" /><Label Text="YouTube" VerticalOptions="Center" />
-                <CheckBox x:Name="TikTokCheck" /><Label Text="TikTok" VerticalOptions="Center" />
-                <CheckBox x:Name="FacebookCheck" /><Label Text="Facebook" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-            <Button Text="Publish"
-                    Clicked="OnPublishClicked"
-                    HorizontalOptions="Center" />
-
-            <Button Text="Check / Start ComfyUI"
-                    Clicked="OnComfyClicked"
-                    HorizontalOptions="Center" />
-
-            <Label Text="Story (edit freely before making video):"
-                    FontSize="18"
-                    FontAttributes="Bold" />
-
-            <Editor x:Name="ResponseEditor"
-                    Placeholder="Generated story lands here — fix whatever you want, video uses this text."
-                    AutoSize="TextChanges"
-                    MinimumHeightRequest="150"
-                    FontSize="16" />
-
-            <Label x:Name="StatusLabel" Text="" FontSize="12" TextColor="Gray" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="SYSTEM" Style="{StaticResource SectionTitle}" />
+                    <Button Text="Check / Start ComfyUI" Style="{StaticResource GhostButton}" Clicked="OnComfyClicked" />
+                    <Label x:Name="StatusLabel" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

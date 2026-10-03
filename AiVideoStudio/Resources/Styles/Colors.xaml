@@ -41,4 +41,17 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <!-- AiVideoStudio cinematic dark theme -->
+    <Color x:Key="AppBackground">#0E1016</Color>
+    <Color x:Key="AppSurface">#141926</Color>
+    <Color x:Key="AppCard">#1A2132</Color>
+    <Color x:Key="AppBorder">#2A3350</Color>
+    <Color x:Key="AppAccent">#7C5CFF</Color>
+    <Color x:Key="AppAccentDeep">#4A2FD6</Color>
+    <Color x:Key="AppText">#F2F4FA</Color>
+    <Color x:Key="AppMuted">#9AA3B8</Color>
+    <Color x:Key="AppSuccess">#3ECF8E</Color>
+    <Color x:Key="AppWarning">#FFB224</Color>
+    <Color x:Key="AppDanger">#FF5C7A</Color>
 </ResourceDictionary>

@@ -216,18 +216,22 @@ public partial class MainPage : ContentPage
         if (FacebookCheck.IsChecked) picked.Add(_publishers.OfType<FacebookPublisher>().First());
         if (picked.Count == 0) { StatusLabel.Text = "Tick at least one platform."; return; }
         var title = string.IsNullOrWhiteSpace(TitleEntry.Text) ? "AiVideoStudio" : TitleEntry.Text.Trim();
-        StatusLabel.Text = $"Publishing to {string.Join(", ", picked.Select(p => p.Name))}...";
-        // ponytail: fan-out with Task.WhenAll per roadmap; per-platform progress bars arrive with the first real (configured) publisher
-        var results = await Task.WhenAll(picked.Select(async p =>
+        var state = picked.ToDictionary(p => p.Name, _ => "starting...");
+        void Render() => MainThread.BeginInvokeOnMainThread(() =>
+            StatusLabel.Text = string.Join("\n", state.Select(kv => $"{kv.Key}: {kv.Value}")));
+        Render();
+        // ponytail: fan-out with Task.WhenAll per roadmap; one status line per platform instead of per-bar widgets
+        await Task.WhenAll(picked.Select(async p =>
         {
+            var prog = new Progress<double>(v => { state[p.Name] = $"{v:P0}"; Render(); });
             try
             {
-                if (!await p.IsConfiguredAsync()) return $"{p.Name}: not configured. {p.SetupHint}";
-                return $"{p.Name}: {await p.PublishAsync(_lastVideo, title, _lastStoryProse)}";
+                if (!await p.IsConfiguredAsync()) state[p.Name] = "not configured — see Settings → " + p.Name;
+                else state[p.Name] = await p.PublishAsync(_lastVideo, title, _lastStoryProse, prog);
             }
-            catch (Exception ex) { return $"{p.Name} failed: {ex.Message}"; }
+            catch (Exception ex) { state[p.Name] = "failed: " + ex.Message.Split('\n')[0]; }
+            Render();
         }));
-        StatusLabel.Text = string.Join("\n", results);
     }
 
     private async void OnComfyClicked(object? sender, EventArgs e)

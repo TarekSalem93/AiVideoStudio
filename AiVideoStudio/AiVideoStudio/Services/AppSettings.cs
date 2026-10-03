@@ -7,6 +7,7 @@ public static class AppSettings
     public static string ComfyUrl => Preferences.Get("comfy_url", "http://127.0.0.1:8188").Trim().TrimEnd('/');
     public static int Steps => Preferences.Get("steps", 6);
     public static string Template => Preferences.Get("template", "minimax_h3_seed_hunter_v21_portrait_api.json");
+
     public static string Model => Preferences.Get("model", "");
     public static string FfmpegPath => Preferences.Get("ffmpeg_path", "ffmpeg");
     public static string Voice => Preferences.Get("voice", "ar-SA-ZariyahNeural");

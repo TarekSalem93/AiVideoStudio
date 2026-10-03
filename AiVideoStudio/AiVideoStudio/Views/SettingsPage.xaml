@@ -4,61 +4,78 @@
              x:Class="AiVideoStudio.Views.SettingsPage"
              Title="Settings">
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <Label Text="Application Settings" 
-                    FontSize="24" 
-                    HorizontalOptions="Center" />
+        <VerticalStackLayout Padding="20,12" Spacing="4">
+            <Label Text="Settings" Style="{StaticResource PageTitle}" />
+            <Label Text="Applied immediately, no restart needed" Style="{StaticResource PageSubtitle}" />
 
-            <Label Text="Ollama Server URL" 
-                    FontSize="16" 
-                    FontAttributes="Bold" />
-            <Entry x:Name="OllamaUrlEntry" 
-                   Placeholder="http://localhost:11434" 
-                   Text="http://localhost:11434"/>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="SERVERS" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Ollama URL" Style="{StaticResource Muted}" />
+                    <Entry x:Name="OllamaUrlEntry" Placeholder="http://localhost:11434" Text="http://localhost:11434" />
+                    <Label Text="ComfyUI URL" Style="{StaticResource Muted}" />
+                    <Entry x:Name="ComfyUiUrlEntry" Placeholder="http://127.0.0.1:8188" Text="http://127.0.0.1:8188" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="ComfyUI Server URL" 
-                    FontSize="16" 
-                    FontAttributes="Bold" />
-            <Entry x:Name="ComfyUiUrlEntry" 
-                   Placeholder="http://localhost:8188" 
-                   Text="http://localhost:8188"/>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="GENERATION DEFAULTS" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Aspect ratio" Style="{StaticResource Muted}" />
+                    <Entry x:Name="AspectRatioEntry" Placeholder="1.77" Text="1.77" />
+                    <Label Text="Default steps" Style="{StaticResource Muted}" />
+                    <Entry x:Name="StepsEntry" Keyboard="Numeric" Placeholder="6" Text="6" />
+                    <Label Text="ffmpeg path" Style="{StaticResource Muted}" />
+                    <Entry x:Name="FfmpegEntry" Placeholder="ffmpeg" Text="ffmpeg" />
+                    <Label Text="Voiceover voice" Style="{StaticResource Muted}" />
+                    <Entry x:Name="VoiceEntry" Placeholder="ar-SA-ZariyahNeural" Text="ar-SA-ZariyahNeural" />
+                    <Button Text="Save Settings" Style="{StaticResource PrimaryButton}" Clicked="OnSaveClicked" />
+                    <Label x:Name="SettingsStatusLabel" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
 
-            <Label Text="Default Generation Parameters" 
-                    FontSize="16" 
-                    FontAttributes="Bold" />
-            
-            <StackLayout>
-                <Label Text="Aspect Ratio" />
-                <Entry x:Name="AspectRatioEntry"
-                       Placeholder="1.77"
-                       Text="1.77"/>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="YOUTUBE" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Client ID (OAuth Desktop app)" Style="{StaticResource Muted}" />
+                    <Entry x:Name="YtIdEntry" Placeholder="...apps.googleusercontent.com" />
+                    <Label Text="Client secret" Style="{StaticResource Muted}" />
+                    <Entry x:Name="YtSecretEntry" Placeholder="Client secret" IsPassword="True" />
+                    <Label Text="Privacy" Style="{StaticResource Muted}" />
+                    <Picker x:Name="YtPrivacyPicker" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Save" Style="{StaticResource GhostButton}" Clicked="OnYtSaveClicked" HorizontalOptions="FillAndExpand" />
+                        <Button Text="Connect" Style="{StaticResource PrimaryButton}" Clicked="OnYtConnectClicked" HorizontalOptions="FillAndExpand" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="YtStatus" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
 
-                <Label Text="Default Steps" />
-                <Entry x:Name="StepsEntry"
-                       Placeholder="6"
-                       Text="6"/>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="TIKTOK" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Client key" Style="{StaticResource Muted}" />
+                    <Entry x:Name="TtKeyEntry" Placeholder="Client key" />
+                    <Label Text="Client secret" Style="{StaticResource Muted}" />
+                    <Entry x:Name="TtSecretEntry" Placeholder="Client secret" IsPassword="True" />
+                    <Label Text="Access token" Style="{StaticResource Muted}" />
+                    <Entry x:Name="TtTokenEntry" Placeholder="Paste access token" IsPassword="True" />
+                    <Button Text="Save TikTok" Style="{StaticResource GhostButton}" Clicked="OnTtSaveClicked" />
+                    <Label x:Name="TtStatus" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
 
-                <Label Text="ffmpeg path (or exe)" />
-                <Entry x:Name="FfmpegEntry"
-                       Placeholder="ffmpeg"
-                       Text="ffmpeg"/>
-
-                <Label Text="Voiceover voice (edge-tts)" />
-                <Entry x:Name="VoiceEntry"
-                       Placeholder="ar-SA-ZariyahNeural"
-                       Text="ar-SA-ZariyahNeural"/>
-            </StackLayout>
-
-            <Button Text="Save Settings"
-                    Clicked="OnSaveClicked"
-                    HorizontalOptions="Center"/>
-
-            <Label x:Name="SettingsStatusLabel" Text="" FontSize="12" TextColor="Gray" />
-
-            <Label Text="Publishing credentials"
-                    FontSize="16"
-                    FontAttributes="Bold" />
-            <Label x:Name="CredsLabel" Text="Checking..." FontSize="12" TextColor="Gray" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="FACEBOOK" Style="{StaticResource SectionTitle}" />
+                    <Label Text="Page ID" Style="{StaticResource Muted}" />
+                    <Entry x:Name="FbPageEntry" Placeholder="Page ID" Keyboard="Numeric" />
+                    <Label Text="Page token" Style="{StaticResource Muted}" />
+                    <Entry x:Name="FbTokenEntry" Placeholder="Paste Page token" IsPassword="True" />
+                    <Button Text="Save Facebook" Style="{StaticResource GhostButton}" Clicked="OnFbSaveClicked" />
+                    <Label x:Name="FbStatus" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

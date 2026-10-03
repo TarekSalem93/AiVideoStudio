@@ -3,23 +3,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="AiVideoStudio.Views.ProjectsPage"
              Title="Projects">
-    <VerticalStackLayout Padding="20" Spacing="10">
-        <Label Text="Projects" FontSize="24" HorizontalOptions="Center" />
-        <HorizontalStackLayout Spacing="10">
-            <Entry x:Name="TitleEntry" Placeholder="New project title" HorizontalOptions="FillAndExpand" />
-            <Button Text="Add" Clicked="OnAddClicked" />
-        </HorizontalStackLayout>
-        <Label x:Name="EmptyLabel" Text="No projects yet." FontSize="14" TextColor="Gray" HorizontalOptions="Center" />
+    <VerticalStackLayout Padding="20,12" Spacing="4">
+        <Label Text="Projects" Style="{StaticResource PageTitle}" />
+        <Label Text="Multi-scene films, rendered in order" Style="{StaticResource PageSubtitle}" />
+        <Border Style="{StaticResource Card}">
+            <HorizontalStackLayout Spacing="10">
+                <Entry x:Name="TitleEntry" Placeholder="New project title" HorizontalOptions="FillAndExpand" VerticalOptions="Center" />
+                <Button Text="Add" Style="{StaticResource PrimaryButton}" Clicked="OnAddClicked" WidthRequest="90" />
+            </HorizontalStackLayout>
+        </Border>
+        <Label x:Name="EmptyLabel" Text="No projects yet — create one above." Style="{StaticResource Muted}" HorizontalOptions="Center" />
         <CollectionView x:Name="ProjectsView">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="5" Padding="10">
-                        <VerticalStackLayout Spacing="4">
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="6">
                             <Label Text="{Binding Title}" FontSize="18" FontAttributes="Bold" />
-                            <Label Text="{Binding Created, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontSize="12" TextColor="Gray" />
+                            <Label Text="{Binding Created, StringFormat='{0:yyyy-MM-dd HH:mm}'}" Style="{StaticResource Muted}" />
                             <HorizontalStackLayout Spacing="10">
-                                <Button Text="Open" Clicked="OnOpenClicked" />
-                                <Button Text="Delete" Clicked="OnDeleteClicked" />
+                                <Button Text="Open" Style="{StaticResource PrimaryButton}" Clicked="OnOpenClicked" HorizontalOptions="FillAndExpand" />
+                                <Button Text="Delete" Style="{StaticResource GhostButton}" Clicked="OnDeleteClicked" HorizontalOptions="FillAndExpand" />
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </Border>

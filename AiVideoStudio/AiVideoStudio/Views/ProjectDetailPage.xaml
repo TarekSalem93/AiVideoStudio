@@ -4,44 +4,64 @@
              x:Class="AiVideoStudio.Views.ProjectDetailPage"
              Title="Project">
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <Label x:Name="TitleLabel" Text="" FontSize="24" HorizontalOptions="Center" />
-            <Label x:Name="InfoLabel" Text="" FontSize="12" TextColor="Gray" HorizontalOptions="Center" />
-            <Label Text="Story to split (replaces scenes)" FontSize="12" />
-            <Editor x:Name="SplitEditor" Placeholder="Paste story here..." AutoSize="TextChanges" MinimumHeightRequest="80" />
-            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                <Entry x:Name="CountEntry" Keyboard="Numeric" Text="3" WidthRequest="60" />
-                <Button Text="Split into scenes" Clicked="OnSplitClicked" />
-                <Button Text="Add scene" Clicked="OnAddSceneClicked" />
-            </HorizontalStackLayout>
-            <Label x:Name="StatusLabel" Text="" FontSize="12" TextColor="Gray" />
-            <Label Text="Project media (same slots for every scene)" FontSize="12" />
-            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                <Button Text="Photos" Clicked="OnMediaPhotosClicked" />
-                <Button Text="Videos" Clicked="OnMediaVideosClicked" />
-                <Button Text="Audios" Clicked="OnMediaAudiosClicked" />
-            </HorizontalStackLayout>
-            <Label x:Name="MediaLabel" Text="No project media." FontSize="12" TextColor="Gray" HorizontalOptions="Center" />
-            <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                <Button Text="Render all" Clicked="OnRenderAllClicked" />
-                <Button Text="Assemble film" Clicked="OnAssembleClicked" />
-                <Button Text="Cancel" Clicked="OnCancelClicked" />
-            </HorizontalStackLayout>
+        <VerticalStackLayout Padding="20,12" Spacing="4">
+            <Label x:Name="TitleLabel" Text="" Style="{StaticResource PageTitle}" />
+            <Label x:Name="InfoLabel" Text="" Style="{StaticResource Muted}" HorizontalOptions="Center" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="SPLIT STORY" Style="{StaticResource SectionTitle}" />
+                    <Editor x:Name="SplitEditor" Placeholder="Paste story here..." AutoSize="TextChanges" MinimumHeightRequest="80" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Entry x:Name="CountEntry" Keyboard="Numeric" Text="3" WidthRequest="60" VerticalOptions="Center" />
+                        <Button Text="Split into scenes" Style="{StaticResource PrimaryButton}" Clicked="OnSplitClicked" HorizontalOptions="FillAndExpand" />
+                    </HorizontalStackLayout>
+                    <Button Text="Add scene" Style="{StaticResource GhostButton}" Clicked="OnAddSceneClicked" />
+                    <Label x:Name="StatusLabel" Text="" Style="{StaticResource Muted}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="PROJECT MEDIA" Style="{StaticResource SectionTitle}" />
+                    <HorizontalStackLayout Spacing="10">
+                        <Button Text="Photos" Style="{StaticResource GhostButton}" Clicked="OnMediaPhotosClicked" HorizontalOptions="FillAndExpand" />
+                        <Button Text="Videos" Style="{StaticResource GhostButton}" Clicked="OnMediaVideosClicked" HorizontalOptions="FillAndExpand" />
+                        <Button Text="Audios" Style="{StaticResource GhostButton}" Clicked="OnMediaAudiosClicked" HorizontalOptions="FillAndExpand" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="MediaLabel" Text="No project media." Style="{StaticResource Muted}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="RENDER" Style="{StaticResource SectionTitle}" />
+                    <Button Text="AI-fix H3 prompts" Style="{StaticResource GhostButton}" Clicked="OnFixH3Clicked" />
+                    <Button Text="Render all" Style="{StaticResource PrimaryButton}" Clicked="OnRenderAllClicked" />
+                    <Button Text="Assemble film" Style="{StaticResource GhostButton}" Clicked="OnAssembleClicked" />
+                    <Button Text="Cancel" Style="{StaticResource GhostButton}" Clicked="OnCancelClicked" />
+                </VerticalStackLayout>
+            </Border>
+
             <CollectionView x:Name="ScenesView">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border Margin="5" Padding="10">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Index, StringFormat='Scene {0}'}" FontAttributes="Bold" />
-                                <Label Text="{Binding Status}" FontSize="12" TextColor="Gray" />
-                                <Label Text="Beats" FontSize="12" />
-                                <Editor ClassId="Beats" Text="{Binding Beats}" AutoSize="TextChanges" MinimumHeightRequest="80" TextChanged="OnSceneEdited" />
-                                <Label Text="H3 prompt (queued as-is)" FontSize="12" />
-                                <Editor ClassId="H3" Text="{Binding H3Prompt}" AutoSize="TextChanges" MinimumHeightRequest="120" TextChanged="OnSceneEdited" />
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="6">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="{Binding Index, StringFormat='Scene {0}'}" FontSize="17" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Border Style="{StaticResource Pill}" HorizontalOptions="Start">
+                                        <Label Text="{Binding Status}" Style="{StaticResource Muted}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+                                <Label Text="BEATS" Style="{StaticResource SectionTitle}" />
+                                <Editor ClassId="Beats" Text="{Binding Beats}" AutoSize="TextChanges" MinimumHeightRequest="70" TextChanged="OnSceneEdited" />
+                                <Label Text="H3 PROMPT" Style="{StaticResource SectionTitle}" />
+                                <Editor ClassId="H3" Text="{Binding H3Prompt}" AutoSize="TextChanges" MinimumHeightRequest="110" TextChanged="OnSceneEdited" />
                                 <HorizontalStackLayout Spacing="10">
-                                    <Button Text="Render scene" Clicked="OnRenderSceneClicked" />
-                                    <Button Text="Pick clip" Clicked="OnPickClipClicked" />
-                                    <Button Text="Remove scene" Clicked="OnRemoveSceneClicked" />
+                                    <Button Text="Render" Style="{StaticResource PrimaryButton}" Clicked="OnRenderSceneClicked" HorizontalOptions="FillAndExpand" />
+                                    <Button Text="Clip" Style="{StaticResource GhostButton}" Clicked="OnPickClipClicked" HorizontalOptions="FillAndExpand" />
+                                    <Button Text="X" Style="{StaticResource GhostButton}" Clicked="OnRemoveSceneClicked" WidthRequest="52" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>

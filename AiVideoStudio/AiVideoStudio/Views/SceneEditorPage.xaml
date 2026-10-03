@@ -4,23 +4,22 @@
              x:Class="AiVideoStudio.Views.SceneEditorPage"
              Title="History">
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <Label Text="Generation History"
-                    FontSize="24"
-                    HorizontalOptions="Center" />
-            <Label x:Name="EmptyLabel" Text="No generations saved yet." FontSize="14" TextColor="Gray" HorizontalOptions="Center" />
+        <VerticalStackLayout Padding="20,12" Spacing="4">
+            <Label Text="History" Style="{StaticResource PageTitle}" />
+            <Label Text="Every finished render, reopenable" Style="{StaticResource PageSubtitle}" />
+            <Label x:Name="EmptyLabel" Text="No generations saved yet." Style="{StaticResource Muted}" HorizontalOptions="Center" />
             <CollectionView x:Name="HistoryView">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Border Margin="5" Padding="10">
-                            <VerticalStackLayout Spacing="4">
-                                <Label Text="{Binding Created, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontAttributes="Bold" />
-                                <Label Text="{Binding Template}" FontSize="12" TextColor="Gray" />
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="{Binding Created, StringFormat='{0:yyyy-MM-dd HH:mm}'}" FontSize="16" FontAttributes="Bold" />
+                                <Label Text="{Binding Template}" Style="{StaticResource Muted}" />
                                 <Label Text="{Binding StoryPreview}" FontSize="14" />
-                                <Label Text="{Binding Seed, StringFormat='Seed {0}'}" FontSize="12" TextColor="Gray" />
+                                <Label Text="{Binding Seed, StringFormat='Seed {0}'}" Style="{StaticResource Muted}" />
                                 <HorizontalStackLayout Spacing="10">
-                                    <Button Text="Open video" Clicked="OnOpenVideoClicked" />
-                                    <Button Text="Folder" Clicked="OnOpenFolderClicked" />
+                                    <Button Text="Open video" Style="{StaticResource PrimaryButton}" Clicked="OnOpenVideoClicked" HorizontalOptions="FillAndExpand" />
+                                    <Button Text="Folder" Style="{StaticResource GhostButton}" Clicked="OnOpenFolderClicked" HorizontalOptions="FillAndExpand" />
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
                         </Border>

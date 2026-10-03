@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -153,6 +154,21 @@ public class ComfyUiService : IComfyUiService
                         bi["steps"] = steps;
 
             // media loader: slots map to <Picture N>/<Video N>/<Audio N> by position
+            // ponytail: scene 1 has no previous clip but continuation templates crash on empty video slots (.shape); seed a blank clip and render gen-only so it just works
+            var videos = new List<string>(videoPaths ?? new());
+            var freshStart = false;
+            string? seedError = null;
+            if (FindVideoNeedyNodes(node).Count > 0 && !TemplateDefaultHasVideo(node) && !videos.Any(File.Exists))
+            {
+                try
+                {
+                    onProgress?.Invoke("Scene 1: no reference clip — seeding a blank one...");
+                    videos.Add(await EnsureFreshStartClipAsync(ct));
+                    freshStart = true;
+                }
+                catch (Exception ex) { seedError = ex.Message; }
+            }
+            PreflightMediaCheck(node, TemplateDefaultHasVideo(node) || videos.Any(File.Exists), seedError);
             var media = new JsonArray();
             async Task AddMedia(List<string>? paths, string kind, int max)
             {
@@ -182,13 +198,14 @@ public class ComfyUiService : IComfyUiService
                 }
             }
             await AddMedia(photoPaths, "picture", 9);
-            await AddMedia(videoPaths, "video", 3);
+            await AddMedia(videos, "video", 3);
             await AddMedia(audioPaths, "audio", 3);
             if (media.Count > 0)
             {
                 var loader = FindNode(node, "MiniMaxH3MediaLoader") ?? node["416"] as JsonObject;
                 if (loader?["inputs"] is JsonObject li) li["media_state"] = media.ToJsonString();
             }
+            if (freshStart) BypassContinuationStitch(node);
 
             var classMap = node
                 .Where(kv => kv.Value is JsonObject o && o["class_type"]?.GetValue<string>() != null)
@@ -209,6 +226,86 @@ public class ComfyUiService : IComfyUiService
         finally { _renderLock.Release(); }
     }
 
+    // ponytail: fail in milliseconds with a readable reason instead of burning GPU minutes on a graph that can never succeed
+    private static void PreflightMediaCheck(JsonObject template, bool mediaHasVideo, string? seedError = null)
+    {
+        var needy = FindVideoNeedyNodes(template);
+        // splitter outputs 0-8 are pictures, 9+ are video/audio; with no video loaded those outputs are None and crash downstream (.shape)
+        if (needy.Count > 0 && !mediaHasVideo)
+            throw new InvalidOperationException(
+                $"Template needs a reference video but none is loaded (nodes {string.Join(",", needy.Distinct())} read empty video slots and ComfyUI would fail with 'NoneType has no attribute shape'). " +
+                "Fix one way: load any video in the app's Videos picker (scene 2+ gets the previous clip automatically), or in ComfyUI run the workflow once with continuation OFF and re-export API format."
+                + (seedError != null ? $" (auto blank-seed also failed: {seedError})" : ""));
+    }
+
+    private static List<string> FindVideoNeedyNodes(JsonObject template)
+    {
+        var splitters = template
+            .Where(kv => kv.Value is JsonObject o && o["class_type"]?.GetValue<string>() == "MiniMaxH3ReferenceSplitter")
+            .Select(kv => kv.Key).ToHashSet();
+        if (splitters.Count == 0) return new();
+        // reference-passing nodes tolerate empty slots by design; image/latent math nodes crash on None (.shape)
+        static bool Tolerant(string cls) => cls is "MiniMaxH3ReferenceToVideo" or "H3PromptReferenceInputs" || cls.Contains("Switch");
+        var needy = new List<string>();
+        foreach (var kv in template)
+        {
+            if (kv.Value is not JsonObject o || o["inputs"] is not JsonObject ins) continue;
+            if (Tolerant(o["class_type"]?.GetValue<string>() ?? "")) continue;
+            foreach (var iv in ins)
+            {
+                if (iv.Value is JsonArray link && link.Count == 2
+                    && link[0]?.GetValue<string>() is string src && splitters.Contains(src)
+                    && link[1]?.GetValue<int>() is int slot && slot >= 9)
+                { needy.Add($"{kv.Key}"); break; }
+            }
+        }
+        return needy;
+    }
+
+    // ponytail: blank seed keeps OG overlap math alive (.shape) but must not leak into the output; OFF exports keep only the gen branch, so do the same (match by title, not id)
+    private static void BypassContinuationStitch(JsonObject template)
+    {
+        foreach (var kv in template)
+        {
+            if (kv.Value is not JsonObject o || o["class_type"]?.GetValue<string>() != "Any Switch (rgthree)") continue;
+            if (o["inputs"] is not JsonObject ins || !ins.ContainsKey("any_01") || !ins.ContainsKey("any_02")) continue;
+            var title = o["_meta"]?["title"]?.GetValue<string>() ?? "";
+            if (title.Contains("Final Video Selection") || title.Contains("Final Audio Selection"))
+                ins.Remove("any_01");
+        }
+    }
+
+    // ponytail: one cached black+silence clip (3s > 22-frame overlap so trim math stays positive); ffmpeg already required for merging so no new dep
+    private static async Task<string> EnsureFreshStartClipAsync(CancellationToken ct)
+    {
+        var dir = Path.Combine(FileSystem.CacheDirectory, "comfyui");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "_freshstart_seed.mp4");
+        if (File.Exists(path)) return path;
+        using var pr = Process.Start(new ProcessStartInfo
+        {
+            FileName = AppSettings.FfmpegPath,
+            Arguments = $"-y -f lavfi -i color=c=black:s=1088x1928:r=24:d=3 -f lavfi -i anullsrc=r=44100:cl=stereo:d=3 -shortest -c:v libx264 -pix_fmt yuv420p -c:a aac \"{path}\"",
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        }) ?? throw new InvalidOperationException($"Could not start '{AppSettings.FfmpegPath}'.");
+        await pr.WaitForExitAsync(ct);
+        if (pr.ExitCode != 0 || !File.Exists(path))
+            throw new InvalidOperationException($"ffmpeg exit {pr.ExitCode}");
+        return path;
+    }
+
+    private static bool TemplateDefaultHasVideo(JsonObject template)
+    {
+        try
+        {
+            var loader = FindNode(template, "MiniMaxH3MediaLoader");
+            var state = loader?["inputs"]?["media_state"]?.GetValue<string>() ?? "";
+            return state.Contains("\"kind\":\"video\"");
+        }
+        catch { return false; }
+    }
     // ponytail: fire-and-forget enrichment; history polling stays the source of truth if the socket drops
     private async Task ListenWsAsync(string clientId, string promptId, Dictionary<string, string> classMap, Action<string>? onProgress, CancellationToken ct)
     {
@@ -257,10 +354,7 @@ public class ComfyUiService : IComfyUiService
             if (entry.TryGetProperty("status", out var st))
             {
                 if (st.TryGetProperty("status_str", out var ss) && ss.GetString() == "error")
-                {
-                    var msgs = st.TryGetProperty("messages", out var mm) ? mm.ToString() : "unknown error";
-                    throw new InvalidOperationException($"ComfyUI render failed: {msgs}");
-                }
+                    throw new InvalidOperationException("ComfyUI render failed: " + ParseComfyError(st));
                 if (st.TryGetProperty("completed", out var done) && !done.GetBoolean())
                 { onProgress?.Invoke("Rendering..."); continue; }
             }
@@ -274,6 +368,27 @@ public class ComfyUiService : IComfyUiService
             onProgress?.Invoke($"Done: {files.Count} file(s).");
             return files;
         }
+    }
+
+    // ponytail: one human line beats a 3KB message dump; full JSON stays in ComfyUI's console
+    private static string ParseComfyError(JsonElement status)
+    {
+        try
+        {
+            if (status.TryGetProperty("messages", out var msgs))
+                foreach (var m in msgs.EnumerateArray())
+                {
+                    if (m.ValueKind != JsonValueKind.Array || m.GetArrayLength() < 2) continue;
+                    if (m[0].GetString() != "execution_error") continue;
+                    var d = m[1];
+                    var node = d.TryGetProperty("node_id", out var nid) ? nid.GetString() : "?";
+                    var type = d.TryGetProperty("node_type", out var nt) ? nt.GetString() : "?";
+                    var msg = d.TryGetProperty("exception_message", out var em) ? (em.GetString() ?? "").Trim() : "";
+                    return $"{type} (node {node}): {msg}";
+                }
+        }
+        catch { }
+        return status.ToString();
     }
 
     public async Task<string> DownloadOutputAsync(string filename, string subfolder, string type, CancellationToken ct = default)
@@ -303,9 +418,12 @@ public class ComfyUiService : IComfyUiService
     public static string ValidateVideoPrompt(string prompt, int photos, int videos, int audios)
     {
         var warns = new List<string>();
-        foreach (var s in new[] { "subject_definitions", "summary", "detailed_description", "overall_soundscape", "non_diegetic_music" })
+        foreach (var s in new[] { "subject_definitions", "summary", "overall_soundscape", "non_diegetic_music" })
             if (!prompt.Contains(s, StringComparison.OrdinalIgnoreCase))
                 warns.Add($"missing section: {s}");
+        if (!prompt.Contains("detailed_description", StringComparison.OrdinalIgnoreCase)
+            && !prompt.Contains("integrated_multimodal_description", StringComparison.OrdinalIgnoreCase))
+            warns.Add("missing section: detailed_description (or integrated_multimodal_description)");
         var tags = Regex.Matches(prompt, @"<d>.*?</d>", RegexOptions.Singleline);
         if (tags.Any(m => !m.Value.Contains("[English]")))
             warns.Add("bare <d> tag without [English] — audio will be wrong, use <d>[English] words</d>");
@@ -383,7 +501,7 @@ public class ComfyUiService : IComfyUiService
                 if (w > 0) break;
             }
             double? dur = doc.RootElement.TryGetProperty("format", out var fmt) &&
-                fmt.TryGetProperty("duration", out var dd) && double.TryParse(dd.GetString(), out var d) ? d : null;
+                fmt.TryGetProperty("duration", out var dd) && double.TryParse(dd.GetRawText().Trim('"'), NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d : null;
             return (w > 0 ? w : 1088, h > 0 ? h : 1928, dur);
         }
         catch { return (1088, 1928, null); }

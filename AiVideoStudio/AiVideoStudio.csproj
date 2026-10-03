@@ -68,9 +68,15 @@
 		<Content Include="AiVideoStudio\Workflows\*.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+
+		<!-- Prompt-writing skills guiding the Ollama builders, copied next to the exe -->
+		<Content Include="AiVideoStudio\Skills\*.md">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Google.Apis.YouTube.v3" Version="1.77.0.4284" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>

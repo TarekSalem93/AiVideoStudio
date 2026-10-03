@@ -22,6 +22,23 @@ public class OllamaService : IOllamaService
         _httpClient.Timeout = TimeSpan.FromSeconds(180);
     }
 
+    // ponytail: guide ships as content next to the exe (same pattern as Workflows); missing file falls back to the built-in brief
+    private static string? _skill;
+    private static string PromptSkill => _skill ??= LoadSkill();
+    private static string LoadSkill()
+    {
+        foreach (var d in new[] { Path.Combine(AppContext.BaseDirectory, "Skills"), @"C:\DEV\ai\AiVideoStudio\AiVideoStudio\Skills" })
+        {
+            try
+            {
+                var p = Path.Combine(d, "VideoPromptGuide.md");
+                if (File.Exists(p)) return File.ReadAllText(p);
+            }
+            catch { }
+        }
+        return "";
+    }
+
     public async Task<List<string>> GetModelsAsync()
     {
         var res = await _httpClient.GetAsync(Url("/api/tags"));
@@ -62,31 +79,56 @@ public class OllamaService : IOllamaService
         return body;
     }
 
-    // ponytail: one director pass turning free prose into the H3PromptIDE structure; spoken lines forced to English because H3 audio mangles anything else
-    public async Task<string> BuildVideoPromptAsync(string story, int photos, int videos, int audios, string? model = null)
+    // ponytail: prompt text in one place so the builders can't drift apart
+    internal static string RefLine(int photos, int videos, int audios)
     {
-        model ??= await PickModelAsync();
         var refs = new List<string>();
         for (var i = 1; i <= photos; i++) refs.Add($"<Picture {i}>");
         for (var i = 1; i <= videos; i++) refs.Add($"<Video {i}>");
         for (var i = 1; i <= audios; i++) refs.Add($"<Audio {i}>");
-        var refLine = refs.Count == 0
+        return refs.Count == 0
             ? "No reference media. Pure text-to-video: describe subject appearance fully in words."
             : $"Reference media available: {string.Join(", ", refs)}. Reference each one by tag where it appears; never invent <Picture>/<Video>/<Audio> tags beyond these.";
+    }
+
+    internal static string VideoSystemPrompt() =>
+        "Convert the story into a MiniMax H3 video prompt. Output ONLY the prompt, plain section names, no markdown, no explanations. Follow this shape exactly:\n" +
+        "subject_definitions:\n<Subject 1> is a girl named Lin, 8, black hair in a braid.\n" +
+        "summary:\n[story] A girl learns to paint and shows her glowing tree painting at the village fair.\n" +
+        "detailed_description:\nThe video is watercolor style. [Shot 1] Morning over a seaside village. Lin (S1) walks with a sketchbook. Her grandfather says: <d>[English] Art is felt with the heart, not seen with the eyes.</d> [Shot 2] At night she dreams of painting a tree made of light.\n" +
+        "overall_soundscape:\nGentle waves, soft pencil scratches, the grandfather's warm voice. No music.\n" +
+        "non_diegetic_music:\nN/A\n" +
+        "Rules: narration and camera NEVER go inside <d> tags. Spoken words MUST be wrapped character-for-character like the example: <d>[English] exact words</d> — the angle brackets and [English] are mandatory machine syntax the video renderer parses, omitting them breaks the audio. The words inside are ALWAYS English even if the story is another language. If nobody speaks, use no <d> tags and write 'Silent. No dialogue.' in overall_soundscape." +
+        (PromptSkill.Length == 0 ? "" : "\n\nVIDEO PROMPT WRITING GUIDE SKILL (follow it). With reference media, use the full-reference six-section form (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music). With no reference media, use the T2VA three-field form (integrated_multimodal_description, overall_soundscape, non_diegetic_music).\n" + PromptSkill);
+
+    internal static string SplitSystemPrompt(int count) =>
+        $"Split the story into exactly {count} scenes for vertical 9:16 phone video (tight portrait framing, one subject, center-weighted). " +
+        "Output ONLY a JSON array, no fences, no commentary: [{\"beats\": \"2-3 sentence visual beats\", \"h3\": \"ONE string holding all five sections\"}]. " +
+        "Each h3 holds subject_definitions, summary, detailed_description ([Shot] beats, spoken words ONLY as <d>[English] exact words</d> in English; no <d> tags if silent), overall_soundscape, non_diegetic_music: N/A." +
+        (PromptSkill.Length == 0 ? "" : " Follow the app's VIDEO PROMPT WRITING GUIDE SKILL: full-reference six-section form (subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music).\n" + PromptSkill);
+
+    internal static List<(string Beats, string H3)> ParseScenes(string text)
+    {
+        text = text.Trim();
+        if (text.StartsWith("```")) text = text.Trim('`', 'j', 's', 'o', 'n', ' ', '\n', '\r');
+        var out_ = new List<(string, string)>();
+        foreach (var el in JsonDocument.Parse(text).RootElement.EnumerateArray())
+            out_.Add(NormalizeScene(el));
+        if (out_.Count == 0) throw new InvalidOperationException("Director returned no scenes. Retry or split manually with Add scene.");
+        return out_;
+    }
+
+    // ponytail: one director pass turning free prose into the H3PromptIDE structure; spoken lines forced to English because H3 audio mangles anything else
+    public async Task<string> BuildVideoPromptAsync(string story, int photos, int videos, int audios, string? model = null)
+    {
+        model ??= await PickModelAsync();
         var request = new
         {
             model,
             messages = new object[]
             {
-                new { role = "system", content =
-                    "Convert the story into a MiniMax H3 video prompt. Output ONLY the prompt, plain section names, no markdown, no explanations. Follow this shape exactly:\n" +
-                    "subject_definitions:\n<Subject 1> is a girl named Lin, 8, black hair in a braid.\n" +
-                    "summary:\n[story] A girl learns to paint and shows her glowing tree painting at the village fair.\n" +
-                    "detailed_description:\nThe video is watercolor style. [Shot 1] Morning over a seaside village. Lin (S1) walks with a sketchbook. Her grandfather says: <d>[English] Art is felt with the heart, not seen with the eyes.</d> [Shot 2] At night she dreams of painting a tree made of light.\n" +
-                    "overall_soundscape:\nGentle waves, soft pencil scratches, the grandfather's warm voice. No music.\n" +
-                    "non_diegetic_music:\nN/A\n" +
-                    "Rules: narration and camera NEVER go inside <d> tags. Spoken words MUST be wrapped character-for-character like the example: <d>[English] exact words</d> — the angle brackets and [English] are mandatory machine syntax the video renderer parses, omitting them breaks the audio. The words inside are ALWAYS English even if the story is another language. If nobody speaks, use no <d> tags and write 'Silent. No dialogue.' in overall_soundscape." },
-                new { role = "user", content = refLine + "\n\nStory:\n" + story }
+                new { role = "system", content = VideoSystemPrompt() },
+                new { role = "user", content = RefLine(photos, videos, audios) + "\n\nStory:\n" + story }
             },
             stream = false
         };
@@ -112,10 +154,7 @@ public class OllamaService : IOllamaService
             model,
             messages = new object[]
             {
-                new { role = "system", content =
-                    $"Split the story into exactly {count} scenes for vertical 9:16 phone video (tight portrait framing, one subject, center-weighted). " +
-                    "Output ONLY a JSON array, no fences, no commentary: [{\"beats\": \"2-3 sentence visual beats\", \"h3\": \"ONE string holding all five sections\"}]. " +
-                    "Each h3 holds subject_definitions, summary, detailed_description ([Shot] beats, spoken words ONLY as <d>[English] exact words</d> in English; no <d> tags if silent), overall_soundscape, non_diegetic_music: N/A." },
+                new { role = "system", content = SplitSystemPrompt(count) },
                 new { role = "user", content = story }
             },
             stream = false
@@ -125,18 +164,11 @@ public class OllamaService : IOllamaService
         var body = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"Ollama {(int)response.StatusCode} with model '{model}': {body}");
-        var text = JsonDocument.Parse(body).RootElement.GetProperty("message").GetProperty("content").GetString() ?? "";
-        text = text.Trim();
-        if (text.StartsWith("```")) text = text.Trim('`', 'j', 's', 'o', 'n', ' ', '\n', '\r');
-        var out_ = new List<(string, string)>();
-        foreach (var el in JsonDocument.Parse(text).RootElement.EnumerateArray())
-            out_.Add(NormalizeScene(el));
-        if (out_.Count == 0) throw new InvalidOperationException("Director returned no scenes. Retry or split manually with Add scene.");
-        return out_;
+        return ParseScenes(JsonDocument.Parse(body).RootElement.GetProperty("message").GetProperty("content").GetString() ?? "");
     }
 
     // ponytail: small models return sections flat instead of nested under h3 — reassemble rather than re-prompt
-    private static (string Beats, string H3) NormalizeScene(JsonElement el)
+    internal static (string Beats, string H3) NormalizeScene(JsonElement el)
     {
         string Str(string k) => el.TryGetProperty(k, out var v) ? v.GetString() ?? "" : "";
         var h3 = Str("h3");

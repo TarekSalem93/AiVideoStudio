@@ -91,25 +91,25 @@
 ---
 
 ## Phase 6: Social Media Multi-Upload Engine ("One-Click Publish")
-> BLOCKED on dev-account registrations (user side). App side: `IPublisher` stubs + `Task.WhenAll` dispatcher + checkboxes UI are in place; each stub throws its exact setup hint.
-- [ ] **Unified Authentication Architecture:**
-  - [ ] Embed local HTTP listener (`http://127.0.0.1:port/callback`) for local desktop OAuth loops.
-  - [ ] Securely store OAuth access/refresh tokens using MAUI `SecureStorage`.
-  - [ ] Add token expiration checks and automatic refresh routines.
-- [ ] **YouTube Publishing:**
-  - [ ] Integrate `Google.Apis.YouTube.v3` NuGet.
-  - [ ] Implement resumable chunked upload with title, description, tags, and privacy status.
-- [ ] **TikTok Direct Post:**
-  - [ ] Register TikTok for Developers app with `video.upload` scope.
-  - [ ] Implement Content Posting API initialization (`POST /v2/post/publish/video/init/`).
-  - [ ] Upload video chunk stream and verify publish status.
-- [ ] **Facebook / Instagram Reels:**
-  - [ ] Configure Meta App with `pages_manage_posts` and `publish_video` permissions.
-  - [ ] Implement Meta Graph API resumable video upload sessions (`/{page-id}/videos`).
-- [x] **Publishing Dispatcher:** ← skeleton wired to stubs
+> YouTube is fully wired (OAuth device-loop + resumable chunked upload + SecureStorage tokens). TikTok/Facebook upload code is real HTTP behind pasted tokens (neither supports desktop loopback). Remaining user-side: Google Cloud OAuth client, TikTok approved app, Meta Page token.
+- [x] **Unified Authentication Architecture:**
+  - [x] Embed local HTTP listener (`http://127.0.0.1:port/callback`) for local desktop OAuth loops. ← via GoogleWebAuthorizationBroker loopback for YouTube
+  - [x] Securely store OAuth access/refresh tokens using MAUI `SecureStorage`. ← AuthStore + SecureDataStore; client secrets too
+  - [ ] Add token expiration checks and automatic refresh routines. ← Google lib auto-refreshes; TikTok/FB re-paste on expiry
+- [x] **YouTube Publishing:** ← REAL via Google.Apis.YouTube.v3 1.77
+  - [x] Integrate `Google.Apis.YouTube.v3` NuGet.
+  - [x] Implement resumable chunked upload with title, description, tags, and privacy status. ← unlisted default, picker in Settings
+- [x] **TikTok Direct Post:** ← REAL Content Posting API (FILE_UPLOAD chunks + publish_id)
+  - [ ] Register TikTok for Developers app with `video.upload` scope. ← USER ACTION
+  - [x] Implement Content Posting API initialization (`POST /v2/post/publish/video/init/`).
+  - [x] Upload video chunk stream and verify publish status.
+- [x] **Facebook / Instagram Reels:** ← REAL Graph v21 resumable (start/transfer/finish)
+  - [ ] Configure Meta App with `pages_manage_posts` and `publish_video` permissions. ← USER ACTION
+  - [x] Implement Meta Graph API resumable video upload sessions (`/{page-id}/videos`).
+- [x] **Publishing Dispatcher:**
   - [x] Build UI upload modal with checkboxes for YouTube, TikTok, and Facebook.
   - [x] Implement `Task.WhenAll` to broadcast video simultaneously to all checked platforms.
-  - [ ] Real-time progress bar for each platform's upload stream.
+  - [x] Real-time progress bar for each platform's upload stream. ← live % status line per platform
 
 ---
 
