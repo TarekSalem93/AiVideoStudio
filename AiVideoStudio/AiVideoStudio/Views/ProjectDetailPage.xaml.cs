@@ -153,7 +153,7 @@ public partial class ProjectDetailPage : ContentPage
         if (i >= 0) _project.Scenes[i] = updated;
     }
 
-    private async Task<bool> RenderOneAsync(string sceneId, string? prevClip, CancellationToken ct)
+    private async Task<bool> RenderOneAsync(string sceneId, CancellationToken ct)
     {
         if (_project == null) return false;
         var scene = _project.Scenes.FirstOrDefault(x => x.Id == sceneId);
@@ -173,7 +173,7 @@ public partial class ProjectDetailPage : ContentPage
             if (!string.IsNullOrWhiteSpace(preWarn))
                 MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Scene {scene.Index} prompt warnings (rendering anyway):\n{preWarn}");
             var files = await _comfy.QueueSceneAsync(scene.H3Prompt, _project.Template, scene.Seed, _project.Steps,
-                _project.Aspect, _project.Mp, photos, videos, audios, prevClip,
+                _project.Aspect, _project.Mp, photos, videos, audios,
                 s => MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Scene {scene.Index}: {s}"), ct);
             var local = new List<string>();
             foreach (var f in files)
@@ -182,36 +182,17 @@ public partial class ProjectDetailPage : ContentPage
                 local.Add(await _comfy.DownloadOutputAsync(parts[2], parts[0], parts[1], ct));
             }
             var chosen = local.FirstOrDefault(p => p.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)) ?? local.FirstOrDefault() ?? "";
-            // ponytail: the template parks new audio at 0s of cumulative clips; slide it to the gen offset in place so the clip (and later the tail trim) carries sound where it belongs
-            if (!string.IsNullOrEmpty(chosen) && !string.IsNullOrEmpty(prevClip)
-                && File.Exists(chosen) && File.Exists(prevClip))
-            {
-                try
-                {
-                    var prevDur = await _merge.GetDurationAsync(prevClip, ct);
-                    var (cvd, _) = await _merge.GetStreamDurationsAsync(chosen, ct);
-                    var clipDur = cvd ?? await _merge.GetDurationAsync(chosen, ct);
-                    if (prevDur.HasValue && clipDur.HasValue && clipDur.Value > prevDur.Value + 0.5)
-                    {
-                        var play = await _merge.GetAudioPlayableDurationAsync(chosen, ct);
-                        if (play.HasValue && play.Value < clipDur.Value - 1.0)
-                        {
-                            MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = $"Scene {scene.Index}: moving audio into place...");
-                            var shifted = await _merge.ShiftAudioAsync(chosen, Math.Max(0, prevDur.Value - ContinuationOverlapSec), ct);
-                            File.Delete(chosen);
-                            File.Move(shifted, chosen);
-                        }
-                    }
-                }
-                catch (Exception ex) { _audioWarnings.Add($"Scene {scene.Index}: audio shift skipped ({ex.Message.Split('\n')[0]})"); }
-            }
-            // ponytail: flag short audio now (stitch kept gen-only audio); full-but-silent means the TTS prompt tags are wrong instead
+            // ponytail: never rewrite the downloaded clip. The old audio-shift here applied the same offset AssembleFilmAsync applies again, and its -shortest truncated the video (measured 16s -> 14.04s) before File.Move overwrote the original.
+            // ponytail: gen-only scenes must carry sound through their own length; a full-length track that goes silent early is a failed render, not a merge problem
             if (!string.IsNullOrEmpty(chosen) && File.Exists(chosen))
             {
                 var (vd, ad) = await _merge.GetStreamDurationsAsync(chosen, ct);
-                if (vd.HasValue && ad.HasValue && ad.Value < vd.Value - 1.0)
+                // ponytail: measure where sound stops rather than where the track ends - ComfyUI pads a mute segment to full length, which is exactly the case a length check misses
+                var audible = await _merge.GetAudibleEndAsync(chosen, ct);
+                if (vd.HasValue && audible.HasValue && vd.Value > 1.5 && audible.Value < vd.Value - 1.0)
                 {
-                    var w = $"Scene {scene.Index}: audio {ad:0.0}s < video {vd:0.0}s — new segment has no voice. Check ComfyUI console for node 326 errors, or fix <d>[English] tags.";
+                    var w = $"Scene {scene.Index}: sound stops at {audible:0.0}s of a {vd:0.0}s clip — this segment came back mute (track is {ad:0.0}s). "
+                        + $"Give the scene a real <d>[English] line</d> in its own shots, or drop any 'sudden silence' wording from overall_soundscape.";
                     _audioWarnings.Add(w);
                     MainThread.BeginInvokeOnMainThread(() => StatusLabel.Text = w);
                 }
@@ -277,7 +258,7 @@ public partial class ProjectDetailPage : ContentPage
                 if (string.IsNullOrWhiteSpace(s.Beats)) continue;
                 StatusLabel.Text = $"Drafting H3 for scene {s.Index}/{_project.Scenes.Count}...";
                 var h3 = await _ollama.BuildVideoPromptAsync(
-                    $"Scene {s.Index} of {_project.Scenes.Count}. Visual beats: {s.Beats}",
+                    $"Scene {s.Index} of {_project.Scenes.Count}. Beats: {s.Beats}. Write the spoken lines for this scene as <d>[English] exact words</d> unless the beats explicitly ask for silence.",
                     photos.Count, videos.Count, audios.Count);
                 SetScene(s with { H3Prompt = h3.Trim() });
                 n++;
@@ -298,9 +279,7 @@ public partial class ProjectDetailPage : ContentPage
         if (_project == null || sender is not Button b || b.BindingContext is not Scene s) return;
         _renderCts?.Cancel();
         _renderCts = new CancellationTokenSource();
-        var prev = _project.Scenes.Where(x => x.Index < s.Index && x.Status == "done" && File.Exists(x.ChosenClip))
-            .OrderByDescending(x => x.Index).FirstOrDefault()?.ChosenClip;
-        await RenderOneAsync(s.Id, prev, _renderCts.Token);
+        await RenderOneAsync(s.Id, _renderCts.Token);
         StatusLabel.Text = "Scene render finished.";
     }
 
@@ -310,15 +289,13 @@ public partial class ProjectDetailPage : ContentPage
         _renderCts?.Cancel();
         _renderCts = new CancellationTokenSource();
         _audioWarnings.Clear();
-        string? prev = null;
         foreach (var s in _project.Scenes.OrderBy(x => x.Index).ToList())
         {
             if (_renderCts.Token.IsCancellationRequested) break;
             StatusLabel.Text = $"Scene {s.Index}/{_project.Scenes.Count}...";
-            var ok = await RenderOneAsync(s.Id, prev, _renderCts.Token);
+            var ok = await RenderOneAsync(s.Id, _renderCts.Token);
             if (_renderCts.Token.IsCancellationRequested) { StatusLabel.Text = "Cancelled."; break; }
             if (!ok) { StatusLabel.Text = $"Stopped: scene {s.Index} failed."; break; }
-            prev = _project.Scenes.First(x => x.Id == s.Id).ChosenClip;
         }
         if (!_renderCts.Token.IsCancellationRequested)
             StatusLabel.Text = "All scenes done — Assemble film when ready."
@@ -353,13 +330,15 @@ public partial class ProjectDetailPage : ContentPage
             const double overlapSec = ContinuationOverlapSec;
             var segments = new List<string>();
             var segDurs = new List<double>();
-            var audioOf = new List<(double? audio, double video)>();
+            var audioDelay = new List<double>();
+            var audioOf = new List<double?>();
             var report = new List<string>();
-            var misplaced = false;
+            var rebuilt = false;
             var temps = new List<string>();
             try
             {
                 double? prevDur = null;
+                double offset = 0;
                 foreach (var c in clips)
                 {
                     ct.ThrowIfCancellationRequested();
@@ -368,38 +347,46 @@ public partial class ProjectDetailPage : ContentPage
                     var d = vd ?? await _merge.GetDurationAsync(c, ct);
                     // ponytail: playable length, not metadata; containers can claim 16s holding 8s of samples
                     var ad = await _merge.GetAudioPlayableDurationAsync(c, ct);
-                    report.Add($"clip{segments.Count + 1}: video {d?.ToString("0.0") ?? "?"}s, audio {(ad?.ToString("0.0") ?? "none")}s");
+                    // ponytail: and where sound actually stops - a mute segment still measures full length, so this is the only number that reveals it
+                    var audible = await _merge.GetAudibleEndAsync(c, ct);
+                    var mute = audible.HasValue && ad.HasValue && audible.Value < ad.Value - 0.75;
+                    report.Add(mute
+                        ? $"clip{segments.Count + 1}: video {d?.ToString("0.0") ?? "?"}s, audio track {ad:0.0}s but SILENT after {audible:0.0}s"
+                        : $"clip{segments.Count + 1}: video {d?.ToString("0.0") ?? "?"}s, audio {(ad?.ToString("0.0") ?? "none")}s");
+                    if (mute) _audioWarnings.Add($"clip{segments.Count + 1} is silent after {audible:0.0}s - no voice for that stretch.");
+                    if (!d.HasValue) report.Add($"clip{segments.Count + 1}: unknown duration — later audio offsets may be off");
                     // ponytail: sanity-guard the cut point; a bogus duration must fall back to plain concat, never to -ss <garbage>
                     var start = prevDur.HasValue && d.HasValue && d.Value > prevDur.Value + 0.5
                         ? prevDur.Value - overlapSec : -1;
                     if (start > 0 && d.HasValue && start < d.Value - 0.5)
                     {
+                        // ponytail: routing still keys off track length. "Sound stops early" and "only the new segment was recorded" look identical in the audio alone, so guessing between them can only make it worse - trim cuts video and audio together, so plain concat is the safe default and the mute case gets a warning instead.
+                        var reachesEnd = ad.HasValue && ad.Value >= d.Value - 1.0;
                         StatusLabel.Text = $"Cutting new part of clip {segments.Count + 1}/{clips.Count}...";
                         var cut = await _merge.TrimStartAsync(c, start, ct);
                         segments.Add(cut);
                         temps.Add(cut);
                         segDurs.Add(d.Value - start);
+                        audioDelay.Add(reachesEnd ? 0 : start);
                     }
                     else
                     {
                         segments.Add(c);
                         segDurs.Add(d ?? 0);
+                        audioDelay.Add(offset);
                     }
-                    audioOf.Add((ad, d ?? 0));
+                    audioOf.Add(ad);
                     if (d.HasValue) prevDur = d;
+                    offset += segDurs[^1];
                 }
-                // ponytail: the template's audio switch keeps gen-only audio at 0s of each cumulative clip; rebuild the timeline (scene1 + each new part at its segment offset) instead of concatenating misplaced tracks
-                misplaced = audioOf.Skip(1).Any(x => x.audio.HasValue && x.audio.Value < x.video - 1.0);
-                if (misplaced)
+                // ponytail: rebuild only when a clip parks a short, new-segment-only audio at 0s; then placing each track explicitly is the only way to line it up. Fully cumulative audio just concats with the video.
+                rebuilt = audioDelay.Skip(1).Any(x => x > 0.001);
+                if (rebuilt)
                 {
                     StatusLabel.Text = "Rebuilding audio timeline...";
                     var parts = new List<(string clip, double delaySec)>();
-                    double offset = 0;
                     for (var i = 0; i < clips.Count; i++)
-                    {
-                        if (audioOf[i].audio.HasValue) parts.Add((clips[i], offset));
-                        offset += segDurs[i];
-                    }
+                        if (audioOf[i].HasValue) parts.Add((clips[i], audioDelay[i]));
                     await _merge.AssembleFilmAsync(segments, parts, outPath, ct);
                 }
                 else
@@ -411,7 +398,7 @@ public partial class ProjectDetailPage : ContentPage
             finally { foreach (var t in temps) try { File.Delete(t); } catch { } }
             _project = _project with { FinalPath = outPath };
             await _store.UpdateAsync(_project);
-            StatusLabel.Text = $"Film ready ({(misplaced ? "audio rebuilt" : "plain merge")}):\n" + outPath
+            StatusLabel.Text = $"Film ready ({(rebuilt ? "audio rebuilt" : "plain merge")}):\n" + outPath
                 + "\n" + string.Join("\n", report);
         }
         catch (OperationCanceledException) { StatusLabel.Text = "Cancelled."; }

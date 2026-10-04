@@ -10,9 +10,9 @@ public interface IVideoMergeService
     Task<string> MergeVideosAsync(IEnumerable<string> videoPaths, string outputPath, CancellationToken ct = default);
     Task<string> AssembleFilmAsync(IReadOnlyList<string> videoSegments, IReadOnlyList<(string clip, double delaySec)> audioParts, string outputPath, CancellationToken ct = default);
     Task<double?> GetAudioPlayableDurationAsync(string path, CancellationToken ct = default);
+    Task<double?> GetAudibleEndAsync(string path, CancellationToken ct = default);
     Task<double?> GetDurationAsync(string path, CancellationToken ct = default);
     Task<(double? video, double? audio)> GetStreamDurationsAsync(string path, CancellationToken ct = default);
-    Task<string> ShiftAudioAsync(string path, double delaySec, CancellationToken ct = default);
     Task<string> TrimStartAsync(string path, double startSeconds, CancellationToken ct = default);
 }
 
@@ -106,6 +106,31 @@ public class VideoMergeService : IVideoMergeService
         catch { return null; }
     }
 
+    // ponytail: track length lies. ComfyUI pads a generated segment with digital silence and still reports it full-length, so a length check never notices a scene that came back mute. Parse silencedetect and return where sound actually stops.
+    public async Task<double?> GetAudibleEndAsync(string path, CancellationToken ct = default)
+    {
+        try
+        {
+            var err = await RunFfmpegCaptureAsync($"-v info -i \"{path}\" -map 0:a -af silencedetect=noise=-45dB:d=0.25 -f null -", ct);
+            double? len = null;
+            Match? last = null;
+            foreach (Match m in Regex.Matches(err, @"time=(\d+):(\d+):([\d.]+)")) last = m;
+            if (last != null)
+                len = int.Parse(last.Groups[1].Value) * 3600 + int.Parse(last.Groups[2].Value) * 60
+                    + double.Parse(last.Groups[3].Value, CultureInfo.InvariantCulture);
+            // ponytail: silencedetect closes a trailing silence at EOF too, so "is the end silent" is not the absence of silence_end - it is the last silence running all the way to the end of the track
+            double? from = null, to = null;
+            foreach (Match m in Regex.Matches(err, @"silence_(start|end):\s*([\d.]+)"))
+            {
+                var at = double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                if (m.Groups[1].Value == "start") { from = at; to = null; } else to = at;
+            }
+            if (from.HasValue && (!to.HasValue || !len.HasValue || to.Value >= len.Value - 0.1)) return from;
+            return len;
+        }
+        catch { return null; }
+    }
+
     // ponytail: ffprobe duration so callers can do timeline math; null when unknown, callers fall back to untrimmed behavior
     public async Task<double?> GetDurationAsync(string path, CancellationToken ct = default)
     {
@@ -168,14 +193,6 @@ public class VideoMergeService : IVideoMergeService
         return (video, audio);
     }
 
-    // ponytail: continuation clips carry the new segment's audio at 0s; push it to the gen offset and backfill silence so the clip plays correctly on its own
-    public async Task<string> ShiftAudioAsync(string path, double delaySec, CancellationToken ct = default)
-    {
-        var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + "_shift.mp4");
-        await RunFfmpegAsync($"-i \"{path}\" -itsoffset {delaySec.ToString("0.###", CultureInfo.InvariantCulture)} -i \"{path}\" -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -shortest \"{tmp}\"", ct);
-        return tmp;
-    }
-
     // ponytail: re-encode (not -c copy) so the cut lands on the exact frame; caller deletes the temp file
     public async Task<string> TrimStartAsync(string path, double startSeconds, CancellationToken ct = default)
     {
@@ -185,7 +202,7 @@ public class VideoMergeService : IVideoMergeService
         return tmp;
     }
 
-    // ponytail: continuation templates leave each new segment's audio at 0s of its own clip while the video stitches; rebuild the audio timeline with delays (scene1 full + each later clip's audio at its segment offset), video stays a stream-copy concat
+    // ponytail: continuation templates leave each new segment's audio at 0s of its own clip while the video stitches; rebuild the audio timeline with delays (scene1 full + each later clip's audio at the offset its video starts), video stays a stream-copy concat
     public async Task<string> AssembleFilmAsync(IReadOnlyList<string> videoSegments, IReadOnlyList<(string clip, double delaySec)> audioParts, string outputPath, CancellationToken ct = default)
     {
         var list = Path.GetTempFileName() + ".txt";
@@ -210,7 +227,8 @@ public class VideoMergeService : IVideoMergeService
                 outLabel = "aout";
             }
             await RunFfmpegAsync($"-y {inputs} -filter_complex \"{filter}\" -map \"[{outLabel}]\" -c:a aac \"{audioOnly}\"", ct);
-            await RunFfmpegAsync($"-y -i \"{videoOnly}\" -i \"{audioOnly}\" -c copy -shortest \"{outputPath}\"", ct);
+            // ponytail: no -shortest. The audio track ends at the last spoken word; -shortest would cut the video there and lose the closing frames of every scene.
+            await RunFfmpegAsync($"-y -i \"{videoOnly}\" -i \"{audioOnly}\" -c copy \"{outputPath}\"", ct);
             return outputPath;
         }
         finally

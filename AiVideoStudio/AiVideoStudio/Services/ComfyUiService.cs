@@ -15,7 +15,7 @@ public interface IComfyUiService
     List<string> ListTemplates();
     Task<string> QueueWorkflowAsync(string workflowJson, int? seed = null);
     Task<List<string>> QueueStoryAsync(string storyPrompt, string? templateName = null, int? seed = null, int steps = 6, List<string>? photoPaths = null, List<string>? videoPaths = null, List<string>? audioPaths = null, Action<string>? onProgress = null, CancellationToken ct = default);
-    Task<List<string>> QueueSceneAsync(string h3prompt, string? templateName, long seed, int steps, string? aspect, double? megapixels, List<string>? photoPaths, List<string>? videoPaths, List<string>? audioPaths, string? prevClipLocal, Action<string>? onProgress = null, CancellationToken ct = default);
+    Task<List<string>> QueueSceneAsync(string h3prompt, string? templateName, long seed, int steps, string? aspect, double? megapixels, List<string>? photoPaths, List<string>? videoPaths, List<string>? audioPaths, Action<string>? onProgress = null, CancellationToken ct = default);
     Task<string> UploadImageAsync(string localPath, CancellationToken ct = default);
     Task<string> DownloadOutputAsync(string filename, string subfolder, string type, CancellationToken ct = default);
 }
@@ -105,14 +105,9 @@ public class ComfyUiService : IComfyUiService
     public Task<List<string>> QueueStoryAsync(string storyPrompt, string? templateName = null, int? seed = null, int steps = 6, List<string>? photoPaths = null, List<string>? videoPaths = null, List<string>? audioPaths = null, Action<string>? onProgress = null, CancellationToken ct = default)
         => QueueCore(storyPrompt, templateName, seed ?? Random.Shared.Next(), steps, null, null, photoPaths, videoPaths, audioPaths, onProgress, ct);
 
-    // ponytail: chaining = previous clip rides video slot 1 through the media loader into ref_video_0; no workflow surgery
-    public Task<List<string>> QueueSceneAsync(string h3prompt, string? templateName, long seed, int steps, string? aspect, double? megapixels, List<string>? photoPaths, List<string>? videoPaths, List<string>? audioPaths, string? prevClipLocal, Action<string>? onProgress = null, CancellationToken ct = default)
-    {
-        var ordered = new List<string>();
-        if (!string.IsNullOrWhiteSpace(prevClipLocal) && File.Exists(prevClipLocal)) ordered.Add(prevClipLocal);
-        if (videoPaths != null) ordered.AddRange(videoPaths.Where(File.Exists));
-        return QueueCore(h3prompt, templateName, seed, steps, aspect, megapixels, photoPaths, ordered.Take(3).ToList(), audioPaths, onProgress, ct);
-    }
+    // ponytail: gen-only scenes - no previous clip chained in. Each scene renders fresh with its own audio and the app stitches; the continuation chain proved it cannot synthesize new audio
+    public Task<List<string>> QueueSceneAsync(string h3prompt, string? templateName, long seed, int steps, string? aspect, double? megapixels, List<string>? photoPaths, List<string>? videoPaths, List<string>? audioPaths, Action<string>? onProgress = null, CancellationToken ct = default)
+        => QueueCore(h3prompt, templateName, seed, steps, aspect, megapixels, photoPaths, videoPaths?.Where(File.Exists).Take(3).ToList(), audioPaths, onProgress, ct);
 
     private async Task<List<string>> QueueCore(string storyPrompt, string? templateName, long seed, int steps, string? aspect, double? megapixels, List<string>? photoPaths, List<string>? videoPaths, List<string>? audioPaths, Action<string>? onProgress, CancellationToken ct)
     {
@@ -427,8 +422,8 @@ public class ComfyUiService : IComfyUiService
         var tags = Regex.Matches(prompt, @"<d>.*?</d>", RegexOptions.Singleline);
         if (tags.Any(m => !m.Value.Contains("[English]")))
             warns.Add("bare <d> tag without [English] — audio will be wrong, use <d>[English] words</d>");
-        if (tags.Count == 0 && Regex.IsMatch(prompt, @"\b(says|said|replies|replied|asks|asked|shouts|whispers|tells|speaks)\b", RegexOptions.IgnoreCase))
-            warns.Add("someone speaks but no <d>[English] tag — wrap the exact English words or the audio will babble");
+        if (tags.Count == 0 && !prompt.Contains("Silent. No dialogue.", StringComparison.OrdinalIgnoreCase))
+            warns.Add("no <d>[English] tag and not marked silent — H3 returns digital silence for a segment with no spoken line, so this scene will render mute");
         foreach (var (tag, max) in new[] { ("Picture", photos), ("Video", videos), ("Audio", audios) })
             foreach (Match m in Regex.Matches(prompt, $@"<{tag} (\d+)>"))
                 if (int.Parse(m.Groups[1].Value) > max)
